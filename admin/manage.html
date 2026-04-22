@@ -1,0 +1,347 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Gestione Contenuti</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: 'Segoe UI', Arial, sans-serif;
+      background: #1a1a2e;
+      color: #fff;
+      min-height: 100vh;
+      padding: 40px 20px;
+    }
+    .container { max-width: 800px; margin: 0 auto; }
+    h1 { font-size: 1.5rem; margin-bottom: 8px; color: #fff; }
+    .subtitle { color: #888; font-size: 0.9rem; margin-bottom: 32px; }
+    .nav { margin-bottom: 32px; }
+    .nav a {
+      color: #e63946;
+      text-decoration: none;
+      font-size: 0.9rem;
+      margin-right: 20px;
+    }
+    .nav a:hover { text-decoration: underline; }
+    .content-list { display: flex; flex-direction: column; gap: 12px; }
+    .content-item {
+      background: #252540;
+      border-radius: 8px;
+      padding: 16px 20px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+    }
+    .item-info { flex: 1; min-width: 0; }
+    .item-title {
+      font-weight: 700;
+      font-size: 1rem;
+      margin-bottom: 4px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .item-slug { font-size: 0.78rem; color: #666; }
+    .item-tags { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 6px; }
+    .item-tag {
+      font-size: 0.7rem;
+      background: #e63946;
+      color: #fff;
+      padding: 2px 8px;
+      border-radius: 10px;
+    }
+    .item-actions { display: flex; gap: 8px; flex-shrink: 0; }
+    .btn {
+      padding: 8px 16px;
+      border: none;
+      border-radius: 4px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: opacity 0.2s;
+    }
+    .btn:hover { opacity: 0.8; }
+    .btn:disabled { opacity: 0.4; cursor: not-allowed; }
+    .btn-duplicate { background: #0f3460; color: #fff; }
+    .btn-delete { background: #e63946; color: #fff; }
+    .loading {
+      text-align: center;
+      padding: 60px;
+      color: #666;
+    }
+    .toast {
+      position: fixed;
+      bottom: 30px;
+      right: 30px;
+      background: #252540;
+      border-left: 4px solid #e63946;
+      color: #fff;
+      padding: 14px 20px;
+      border-radius: 6px;
+      font-size: 0.9rem;
+      opacity: 0;
+      transition: opacity 0.3s;
+      pointer-events: none;
+      z-index: 1000;
+    }
+    .toast.show { opacity: 1; }
+    .toast.success { border-color: #2ecc71; }
+    .not-logged {
+      text-align: center;
+      padding: 60px 20px;
+    }
+    .not-logged p { color: #888; margin-bottom: 20px; }
+    .not-logged a {
+      background: #e63946;
+      color: #fff;
+      padding: 12px 28px;
+      border-radius: 4px;
+      text-decoration: none;
+      font-weight: 700;
+    }
+    .confirm-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.7);
+      z-index: 2000;
+      align-items: center;
+      justify-content: center;
+    }
+    .confirm-overlay.show { display: flex; }
+    .confirm-box {
+      background: #252540;
+      border-radius: 8px;
+      padding: 32px;
+      max-width: 400px;
+      width: 90%;
+      text-align: center;
+    }
+    .confirm-box h3 { margin-bottom: 12px; }
+    .confirm-box p { color: #aaa; margin-bottom: 24px; font-size: 0.9rem; }
+    .confirm-actions { display: flex; gap: 12px; justify-content: center; }
+  </style>
+</head>
+<body>
+<div class="container">
+  <div class="nav">
+    <a href="/admin/">Pannello CMS</a>
+    <a href="/">Vedi sito</a>
+  </div>
+  <h1>Gestione Contenuti</h1>
+  <p class="subtitle">Duplica o elimina i contenuti senza aprirli.</p>
+  <div class="content-list" id="list">
+    <div class="loading">Verifica accesso...</div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<div class="confirm-overlay" id="confirm-overlay">
+  <div class="confirm-box">
+    <h3>Conferma eliminazione</h3>
+    <p id="confirm-text"></p>
+    <div class="confirm-actions">
+      <button class="btn btn-duplicate" onclick="closeConfirm()">Annulla</button>
+      <button class="btn btn-delete" id="confirm-ok">Elimina</button>
+    </div>
+  </div>
+</div>
+
+<script>
+  const REPO = 'NopWebGit/unife-portal';
+  const BRANCH = 'main';
+  const API_BASE = `https://api.github.com/repos/${REPO}`;
+
+  let token = null;
+  let pendingDelete = null;
+
+  function getToken() {
+    // Decap CMS salva il token in localStorage
+    const keys = ['netlify-cms-user', 'decap-cms-user'];
+    for (const key of keys) {
+      const raw = localStorage.getItem(key);
+      if (raw) {
+        try {
+          const parsed = JSON.parse(raw);
+          if (parsed.token) return parsed.token;
+        } catch {}
+      }
+    }
+    // Cerca in tutte le chiavi localStorage
+    for (let i = 0; i < localStorage.length; i++) {
+      const key = localStorage.key(i);
+      try {
+        const val = JSON.parse(localStorage.getItem(key));
+        if (val && val.token && val.provider === 'github') return val.token;
+      } catch {}
+    }
+    return null;
+  }
+
+  function showToast(msg, success = false) {
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.className = 'toast show' + (success ? ' success' : '');
+    setTimeout(() => t.className = 'toast', 3000);
+  }
+
+  function parseFrontmatter(text) {
+    const match = text.match(/^---\n([\s\S]*?)\n---/);
+    if (!match) return { title: 'Senza titolo', tags: [] };
+    const meta = {};
+    match[1].split('\n').forEach(line => {
+      const idx = line.indexOf(':');
+      if (idx === -1) return;
+      const key = line.substring(0, idx).trim();
+      const val = line.substring(idx + 1).trim().replace(/^["']|["']$/g, '');
+      meta[key] = val;
+    });
+    let tags = [];
+    if (meta.tags) {
+      try { tags = JSON.parse(meta.tags.replace(/'/g, '"')); }
+      catch { tags = [meta.tags]; }
+    }
+    return { title: meta.title || 'Senza titolo', tags };
+  }
+
+  async function githubGet(path) {
+    const res = await fetch(`${API_BASE}/${path}`, {
+      headers: { Authorization: `token ${token}` }
+    });
+    if (!res.ok) throw new Error(`Errore API: ${res.status}`);
+    return res.json();
+  }
+
+  async function loadList() {
+    token = getToken();
+    const list = document.getElementById('list');
+
+    if (!token) {
+      list.innerHTML = `
+        <div class="not-logged">
+          <p>Devi prima accedere al pannello CMS per usare questa pagina.</p>
+          <a href="/admin/">Vai al pannello CMS</a>
+        </div>`;
+      return;
+    }
+
+    try {
+      const files = await githubGet(`contents/content?ref=${BRANCH}`);
+      const mdFiles = files.filter(f => f.name.endsWith('.md'));
+
+      if (mdFiles.length === 0) {
+        list.innerHTML = '<div class="loading">Nessun contenuto presente.</div>';
+        return;
+      }
+
+      const items = await Promise.all(mdFiles.map(async f => {
+        const data = await githubGet(`contents/${f.path}?ref=${BRANCH}`);
+        const text = atob(data.content.replace(/\n/g, ''));
+        const decoded = new TextDecoder().decode(Uint8Array.from(atob(data.content.replace(/\n/g, '')), c => c.charCodeAt(0)));
+        const { title, tags } = parseFrontmatter(decoded);
+        return { name: f.name, path: f.path, sha: data.sha, title, tags, content: data.content };
+      }));
+
+      list.innerHTML = items.map(item => `
+        <div class="content-item" id="item-${item.name}">
+          <div class="item-info">
+            <div class="item-title">${item.title}</div>
+            <div class="item-slug">${item.name}</div>
+            <div class="item-tags">${item.tags.map(t => `<span class="item-tag">${t}</span>`).join('')}</div>
+          </div>
+          <div class="item-actions">
+            <button class="btn btn-duplicate" onclick="duplicate('${item.name}', '${item.path}')">Duplica</button>
+            <button class="btn btn-delete" onclick="askDelete('${item.name}', '${item.path}', '${item.sha}', '${item.title.replace(/'/g, "\\'")}')">Elimina</button>
+          </div>
+        </div>`).join('');
+
+      // Salva items globalmente per duplica
+      window._items = items;
+
+    } catch (e) {
+      list.innerHTML = `<div class="loading">Errore: ${e.message}</div>`;
+    }
+  }
+
+  async function duplicate(name, path) {
+    const item = window._items.find(i => i.name === name);
+    if (!item) return;
+
+    const base = name.replace('.md', '');
+    const newName = `${base}-copia-${Date.now()}.md`;
+    const newPath = `content/${newName}`;
+
+    const btn = document.querySelector(`#item-${name} .btn-duplicate`);
+    btn.disabled = true;
+    btn.textContent = 'Duplicazione...';
+
+    try {
+      await fetch(`${API_BASE}/contents/${newPath}`, {
+        method: 'PUT',
+        headers: {
+          Authorization: `token ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          message: `Duplica ${name}`,
+          content: item.content,
+          branch: BRANCH
+        })
+      });
+      showToast('Contenuto duplicato con successo.', true);
+      setTimeout(loadList, 1500);
+    } catch (e) {
+      showToast('Errore durante la duplicazione.');
+      btn.disabled = false;
+      btn.textContent = 'Duplica';
+    }
+  }
+
+  function askDelete(name, path, sha, title) {
+    pendingDelete = { name, path, sha };
+    document.getElementById('confirm-text').textContent = `Stai per eliminare "${title}". Questa azione non è reversibile.`;
+    document.getElementById('confirm-overlay').classList.add('show');
+    document.getElementById('confirm-ok').onclick = confirmDelete;
+  }
+
+  function closeConfirm() {
+    document.getElementById('confirm-overlay').classList.remove('show');
+    pendingDelete = null;
+  }
+
+  async function confirmDelete() {
+    if (!pendingDelete) return;
+    const { name, path, sha } = pendingDelete;
+    closeConfirm();
+
+    const btn = document.querySelector(`#item-${name} .btn-delete`);
+    if (btn) { btn.disabled = true; btn.textContent = 'Eliminazione...'; }
+
+    try {
+      await fetch(`${API_BASE}/contents/${path}`, {
+        method: 'DELETE',
+        headers: {
+          Authorization: `token ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          message: `Elimina ${name}`,
+          sha,
+          branch: BRANCH
+        })
+      });
+      showToast('Contenuto eliminato.', true);
+      setTimeout(loadList, 1500);
+    } catch (e) {
+      showToast('Errore durante l\'eliminazione.');
+      if (btn) { btn.disabled = false; btn.textContent = 'Elimina'; }
+    }
+  }
+
+  loadList();
+</script>
+</body>
+</html>
