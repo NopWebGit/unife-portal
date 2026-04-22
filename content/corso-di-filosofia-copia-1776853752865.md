@@ -1,6 +1,6 @@
 ---
-title: Corso di Filosofia
-image: /uploads/big.driver.2014-poster.jpg
+title: Corso di Letteratura
+image: /uploads/30-giorni-di-buio-poster.jpg
 link: https://www.unife.it
 button_label: Vedi altro
 ---
