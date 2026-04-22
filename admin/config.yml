@@ -1,0 +1,20 @@
+backend:
+  name: github
+  repo: NopWebGit/unife-portal
+  branch: main
+
+media_folder: "uploads"
+public_folder: "/uploads"
+
+collections:
+  - name: "contenuti"
+    label: "Contenuti"
+    folder: "content"
+    create: true
+    slug: "{{slug}}"
+    fields:
+      - { label: "Titolo", name: "title", widget: "string" }
+      - { label: "Testo", name: "body", widget: "markdown" }
+      - { label: "Immagine", name: "image", widget: "image", required: false }
+      - { label: "Link esterno", name: "link", widget: "string", required: false }
+      - { label: "Etichetta pulsante", name: "button_label", widget: "string", required: false }
