@@ -10,143 +10,281 @@
 
     body {
       font-family: 'Segoe UI', Arial, sans-serif;
-      background: #0a0a0f;
+      background: #141414;
       color: #fff;
       min-height: 100vh;
+      overflow-x: hidden;
     }
 
+    /* HEADER */
     header {
-      background: linear-gradient(180deg, #000 0%, transparent 100%);
-      padding: 20px 40px;
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      z-index: 1000;
+      padding: 0 40px;
+      height: 68px;
       display: flex;
       align-items: center;
-      justify-content: space-between;
-      position: sticky;
-      top: 0;
-      z-index: 100;
+      background: linear-gradient(180deg, rgba(0,0,0,0.9) 0%, transparent 100%);
+      transition: background 0.3s;
     }
-
+    header.solid { background: #141414; }
     .logo {
-      font-size: 1.6rem;
-      font-weight: 800;
+      font-size: 1.8rem;
+      font-weight: 900;
       color: #e63946;
-      letter-spacing: 1px;
+      letter-spacing: 2px;
+      cursor: pointer;
     }
 
+    /* HERO */
     .hero {
-      background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
-      padding: 80px 40px;
-      text-align: center;
+      position: relative;
+      height: 80vh;
+      min-height: 500px;
+      display: flex;
+      align-items: flex-end;
+      padding: 0 40px 80px;
+      overflow: hidden;
     }
-
+    .hero-bg {
+      position: absolute;
+      inset: 0;
+      background-size: cover;
+      background-position: center top;
+      background-color: #1a1a2e;
+    }
+    .hero-bg::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(
+        0deg,
+        #141414 0%,
+        rgba(20,20,20,0.6) 40%,
+        rgba(20,20,20,0.1) 100%
+      );
+    }
+    .hero-content {
+      position: relative;
+      z-index: 1;
+      max-width: 600px;
+    }
+    .hero-tags {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin-bottom: 16px;
+    }
+    .tag-badge {
+      background: rgba(230,57,70,0.85);
+      color: #fff;
+      padding: 4px 12px;
+      border-radius: 20px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
     .hero h1 {
       font-size: clamp(1.8rem, 5vw, 3.5rem);
       font-weight: 900;
       margin-bottom: 16px;
-      line-height: 1.2;
+      line-height: 1.1;
+      text-shadow: 2px 2px 8px rgba(0,0,0,0.8);
     }
-
     .hero p {
-      font-size: clamp(1rem, 2vw, 1.3rem);
-      color: #aaa;
-      max-width: 600px;
-      margin: 0 auto 30px;
-    }
-
-    .hero-btn {
-      display: inline-block;
-      background: #e63946;
-      color: #fff;
-      padding: 14px 36px;
-      border-radius: 4px;
-      text-decoration: none;
-      font-weight: 700;
-      font-size: 1rem;
-      transition: background 0.2s;
-    }
-
-    .hero-btn:hover { background: #c1121f; }
-
-    .section-title {
-      font-size: 1.4rem;
-      font-weight: 700;
-      padding: 40px 40px 16px;
-      color: #fff;
-    }
-
-    .cards-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-      gap: 20px;
-      padding: 0 40px 40px;
-    }
-
-    .card {
-      background: #1a1a2e;
-      border-radius: 8px;
-      overflow: hidden;
-      transition: transform 0.2s, box-shadow 0.2s;
-      cursor: pointer;
-    }
-
-    .card:hover {
-      transform: translateY(-4px);
-      box-shadow: 0 12px 40px rgba(230,57,70,0.2);
-    }
-
-    .card-img {
-      width: 100%;
-      aspect-ratio: 16/9;
-      object-fit: cover;
-      background: #0f3460;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      color: #444;
-      font-size: 0.9rem;
-    }
-
-    .card-img img {
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-    }
-
-    .card-body {
-      padding: 16px;
-    }
-
-    .card-title {
-      font-size: 1rem;
-      font-weight: 700;
-      margin-bottom: 8px;
-    }
-
-    .card-text {
-      font-size: 0.85rem;
-      color: #aaa;
+      font-size: clamp(0.9rem, 1.5vw, 1.1rem);
+      color: #ccc;
+      margin-bottom: 28px;
       line-height: 1.5;
-      margin-bottom: 14px;
       display: -webkit-box;
       -webkit-line-clamp: 3;
       -webkit-box-orient: vertical;
       overflow: hidden;
     }
+    .hero-btn {
+      display: inline-block;
+      background: #fff;
+      color: #000;
+      padding: 12px 32px;
+      border-radius: 4px;
+      font-weight: 700;
+      font-size: 1rem;
+      text-decoration: none;
+      cursor: pointer;
+      border: none;
+      transition: background 0.2s;
+    }
+    .hero-btn:hover { background: rgba(255,255,255,0.8); }
 
-    .card-btn {
+    /* SEZIONI RIGHE */
+    .section { padding: 0 40px 40px; margin-top: -60px; position: relative; z-index: 2; }
+    .section-title {
+      font-size: 1.2rem;
+      font-weight: 700;
+      margin-bottom: 14px;
+      color: #e5e5e5;
+    }
+    .row-scroll {
+      display: flex;
+      gap: 8px;
+      overflow-x: auto;
+      padding-bottom: 12px;
+      scrollbar-width: none;
+    }
+    .row-scroll::-webkit-scrollbar { display: none; }
+
+    /* CARD */
+    .card {
+      flex: 0 0 220px;
+      border-radius: 4px;
+      overflow: hidden;
+      cursor: pointer;
+      position: relative;
+      transition: transform 0.3s, box-shadow 0.3s;
+      background: #1f1f1f;
+    }
+    .card:hover {
+      transform: scale(1.08);
+      box-shadow: 0 16px 40px rgba(0,0,0,0.6);
+      z-index: 10;
+    }
+    .card-thumb {
+      width: 100%;
+      aspect-ratio: 16/9;
+      object-fit: cover;
+      background: #2a2a3e;
+      display: block;
+    }
+    .card-thumb-placeholder {
+      width: 100%;
+      aspect-ratio: 16/9;
+      background: linear-gradient(135deg, #1a1a2e, #0f3460);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #444;
+      font-size: 0.8rem;
+    }
+    .card-info {
+      padding: 10px 12px;
+    }
+    .card-title {
+      font-size: 0.85rem;
+      font-weight: 700;
+      margin-bottom: 6px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .card-tags {
+      display: flex;
+      gap: 4px;
+      flex-wrap: wrap;
+    }
+    .card-tag {
+      font-size: 0.7rem;
+      color: #aaa;
+      background: #2a2a2a;
+      padding: 2px 8px;
+      border-radius: 10px;
+    }
+
+    /* PAGINA DETTAGLIO */
+    #detail-page {
+      display: none;
+      min-height: 100vh;
+      background: #141414;
+    }
+    .detail-hero {
+      position: relative;
+      height: 60vh;
+      min-height: 400px;
+      overflow: hidden;
+    }
+    .detail-hero-bg {
+      position: absolute;
+      inset: 0;
+      background-size: cover;
+      background-position: center;
+      background-color: #1a1a2e;
+    }
+    .detail-hero-bg::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(0deg, #141414 0%, rgba(20,20,20,0.4) 60%, rgba(20,20,20,0.2) 100%);
+    }
+    .detail-content {
+      padding: 40px;
+      max-width: 860px;
+      margin: 0 auto;
+    }
+    .detail-tags {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin-bottom: 16px;
+    }
+    .detail-title {
+      font-size: clamp(1.8rem, 4vw, 3rem);
+      font-weight: 900;
+      margin-bottom: 20px;
+      line-height: 1.1;
+    }
+    .detail-body {
+      font-size: 1rem;
+      color: #ccc;
+      line-height: 1.7;
+      margin-bottom: 32px;
+    }
+    .detail-body p { margin-bottom: 12px; }
+    .detail-body h1,
+    .detail-body h2,
+    .detail-body h3 {
+      color: #fff;
+      margin: 20px 0 10px;
+    }
+    .detail-link {
       display: inline-block;
       background: #e63946;
       color: #fff;
-      padding: 8px 20px;
+      padding: 12px 32px;
       border-radius: 4px;
       text-decoration: none;
-      font-size: 0.85rem;
-      font-weight: 600;
+      font-weight: 700;
+      margin-bottom: 60px;
       transition: background 0.2s;
     }
+    .detail-link:hover { background: #c1121f; }
+    .detail-section-title {
+      font-size: 1.1rem;
+      font-weight: 700;
+      margin-bottom: 14px;
+      color: #e5e5e5;
+      padding: 0 40px;
+    }
+    .detail-row { padding: 0 40px 40px; }
+    .back-btn {
+      display: block;
+      width: fit-content;
+      margin: 0 auto 60px;
+      background: transparent;
+      border: 2px solid #fff;
+      color: #fff;
+      padding: 12px 40px;
+      border-radius: 4px;
+      font-size: 1rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    .back-btn:hover { background: rgba(255,255,255,0.1); }
 
-    .card-btn:hover { background: #c1121f; }
-
+    /* LOADING / EMPTY */
     .loading {
       text-align: center;
       padding: 60px;
@@ -159,39 +297,57 @@
       padding: 30px;
       color: #444;
       font-size: 0.85rem;
-      margin-top: 40px;
     }
 
     @media (max-width: 600px) {
-      header { padding: 16px 20px; }
-      .hero { padding: 60px 20px; }
-      .section-title { padding: 30px 20px 12px; }
-      .cards-grid { padding: 0 20px 30px; gap: 16px; }
+      header { padding: 0 20px; }
+      .hero { padding: 0 20px 60px; }
+      .section { padding: 0 20px 30px; }
+      .card { flex: 0 0 160px; }
+      .detail-content { padding: 20px; }
+      .detail-section-title { padding: 0 20px; }
+      .detail-row { padding: 0 20px 30px; }
     }
   </style>
 </head>
 <body>
 
-<header>
-  <div class="logo">UNIFE</div>
+<header id="main-header">
+  <div class="logo" onclick="showHome()">UNIFE</div>
 </header>
 
-<section class="hero">
-  <h1>Orientamento 2026</h1>
-  <p>Scopri i corsi, i campus e le opportunità che ti aspettano.</p>
-  <a href="#contenuti" class="hero-btn">Esplora</a>
-</section>
-
-<div id="contenuti">
-  <div class="section-title">In evidenza</div>
-  <div class="cards-grid" id="cards-container">
-    <div class="loading">Caricamento contenuti...</div>
+<!-- HOME PAGE -->
+<div id="home-page">
+  <div class="hero" id="hero">
+    <div class="hero-bg" id="hero-bg"></div>
+    <div class="hero-content" id="hero-content">
+      <div class="loading">Caricamento...</div>
+    </div>
   </div>
+  <div id="sections-container"></div>
+  <footer>Università di Ferrara &mdash; Orientamento 2026</footer>
 </div>
 
-<footer>
-  Università di Ferrara &mdash; Orientamento 2026
-</footer>
+<!-- PAGINA DETTAGLIO -->
+<div id="detail-page">
+  <div class="detail-hero">
+    <div class="detail-hero-bg" id="detail-bg"></div>
+  </div>
+  <div class="detail-content">
+    <div class="detail-tags" id="detail-tags"></div>
+    <div class="detail-title" id="detail-title"></div>
+    <div class="detail-body" id="detail-body"></div>
+    <a class="detail-link" id="detail-link" target="_blank" style="display:none">Scopri di più</a>
+  </div>
+  <div id="detail-similar-section">
+    <div class="detail-section-title">Contenuti simili</div>
+    <div class="detail-row">
+      <div class="row-scroll" id="detail-similar"></div>
+    </div>
+  </div>
+  <button class="back-btn" onclick="showHome()">Torna alla home</button>
+  <footer>Università di Ferrara &mdash; Orientamento 2026</footer>
+</div>
 
 <script>
   const REPO = 'NopWebGit/unife-portal';
@@ -199,62 +355,184 @@
   const API = `https://api.github.com/repos/${REPO}/contents/content?ref=${BRANCH}`;
   const RAW = `https://raw.githubusercontent.com/${REPO}/${BRANCH}/`;
 
+  let allContent = [];
+
+  // Scroll header
+  window.addEventListener('scroll', () => {
+    const h = document.getElementById('main-header');
+    h.classList.toggle('solid', window.scrollY > 60);
+  });
+
   function parseFrontmatter(text) {
     const match = text.match(/^---\n([\s\S]*?)\n---\n?([\s\S]*)$/);
     if (!match) return { meta: {}, body: text };
     const meta = {};
     match[1].split('\n').forEach(line => {
-      const [key, ...val] = line.split(':');
-      if (key) meta[key.trim()] = val.join(':').trim().replace(/^["']|["']$/g, '');
+      const colonIdx = line.indexOf(':');
+      if (colonIdx === -1) return;
+      const key = line.substring(0, colonIdx).trim();
+      const val = line.substring(colonIdx + 1).trim().replace(/^["']|["']$/g, '');
+      meta[key] = val;
     });
+    // Parse tags list
+    if (meta.tags) {
+      try {
+        meta.tags = JSON.parse(meta.tags.replace(/'/g, '"'));
+      } catch {
+        meta.tags = [meta.tags];
+      }
+    } else {
+      meta.tags = [];
+    }
     return { meta, body: match[2].trim() };
   }
 
-  async function loadCards() {
-    const container = document.getElementById('cards-container');
+  function buildCard(item) {
+    const thumb = item.meta.image
+      ? `<img class="card-thumb" src="${item.meta.image}" alt="${item.meta.title || ''}">`
+      : `<div class="card-thumb-placeholder">Nessuna immagine</div>`;
+    const tags = (item.meta.tags || []).map(t => `<span class="card-tag">${t}</span>`).join('');
+    return `
+      <div class="card" onclick="showDetail('${item.slug}')">
+        ${thumb}
+        <div class="card-info">
+          <div class="card-title">${item.meta.title || 'Senza titolo'}</div>
+          <div class="card-tags">${tags}</div>
+        </div>
+      </div>`;
+  }
+
+  function groupByTag(items) {
+    const groups = {};
+    items.forEach(item => {
+      (item.meta.tags || []).forEach(tag => {
+        if (!groups[tag]) groups[tag] = [];
+        groups[tag].push(item);
+      });
+    });
+    return groups;
+  }
+
+  function renderHome() {
+    if (allContent.length === 0) return;
+
+    // Hero: primo contenuto
+    const hero = allContent[0];
+    const heroBg = document.getElementById('hero-bg');
+    if (hero.meta.image) heroBg.style.backgroundImage = `url('${hero.meta.image}')`;
+
+    const plainText = hero.body.replace(/[#*_`>\[\]!]/g, '').substring(0, 180);
+    const heroTags = (hero.meta.tags || []).map(t => `<span class="tag-badge">${t}</span>`).join('');
+    document.getElementById('hero-content').innerHTML = `
+      <div class="hero-tags">${heroTags}</div>
+      <h1>${hero.meta.title || ''}</h1>
+      <p>${plainText}</p>
+      <button class="hero-btn" onclick="showDetail('${hero.slug}')">Scopri di più</button>
+    `;
+
+    // Sezioni per tag
+    const groups = groupByTag(allContent);
+    const container = document.getElementById('sections-container');
+    container.innerHTML = '';
+
+    // Se non ci sono tag mostra tutto in una riga
+    if (Object.keys(groups).length === 0) {
+      container.innerHTML = `
+        <div class="section">
+          <div class="section-title">Tutti i contenuti</div>
+          <div class="row-scroll">${allContent.map(buildCard).join('')}</div>
+        </div>`;
+      return;
+    }
+
+    Object.entries(groups).forEach(([tag, items]) => {
+      const section = document.createElement('div');
+      section.className = 'section';
+      section.innerHTML = `
+        <div class="section-title">${tag}</div>
+        <div class="row-scroll">${items.map(buildCard).join('')}</div>
+      `;
+      container.appendChild(section);
+    });
+  }
+
+  function showDetail(slug) {
+    const item = allContent.find(i => i.slug === slug);
+    if (!item) return;
+
+    window.scrollTo(0, 0);
+    document.getElementById('home-page').style.display = 'none';
+    document.getElementById('detail-page').style.display = 'block';
+
+    const bg = document.getElementById('detail-bg');
+    bg.style.backgroundImage = item.meta.image ? `url('${item.meta.image}')` : '';
+
+    document.getElementById('detail-title').textContent = item.meta.title || '';
+    document.getElementById('detail-body').innerHTML = marked.parse(item.body || '');
+
+    const tagsEl = document.getElementById('detail-tags');
+    tagsEl.innerHTML = (item.meta.tags || []).map(t => `<span class="tag-badge">${t}</span>`).join('');
+
+    const linkEl = document.getElementById('detail-link');
+    if (item.meta.link) {
+      linkEl.href = item.meta.link;
+      linkEl.textContent = item.meta.button_label || 'Scopri di più';
+      linkEl.style.display = 'inline-block';
+    } else {
+      linkEl.style.display = 'none';
+    }
+
+    // Contenuti simili (stessi tag, escluso corrente)
+    const itemTags = item.meta.tags || [];
+    const similar = allContent.filter(i =>
+      i.slug !== slug && (i.meta.tags || []).some(t => itemTags.includes(t))
+    );
+    const similarEl = document.getElementById('detail-similar');
+    const similarSection = document.getElementById('detail-similar-section');
+    if (similar.length > 0) {
+      similarEl.innerHTML = similar.map(buildCard).join('');
+      similarSection.style.display = 'block';
+    } else {
+      similarSection.style.display = 'none';
+    }
+  }
+
+  function showHome() {
+    window.scrollTo(0, 0);
+    document.getElementById('detail-page').style.display = 'none';
+    document.getElementById('home-page').style.display = 'block';
+  }
+
+  async function loadContent() {
     try {
       const res = await fetch(API);
-      if (!res.ok) throw new Error('Nessun contenuto trovato');
+      if (!res.ok) throw new Error('Nessun contenuto');
       const files = await res.json();
       const mdFiles = files.filter(f => f.name.endsWith('.md'));
 
       if (mdFiles.length === 0) {
-        container.innerHTML = '<div class="loading">Nessun contenuto ancora. Accedi al pannello admin per aggiungerne.</div>';
+        document.getElementById('hero-content').innerHTML =
+          '<div class="loading">Nessun contenuto ancora. Accedi al pannello admin per aggiungerne.</div>';
         return;
       }
 
-      const cards = await Promise.all(mdFiles.map(async file => {
+      const items = await Promise.all(mdFiles.map(async file => {
         const raw = await fetch(RAW + file.path);
         const text = await raw.text();
         const { meta, body } = parseFrontmatter(text);
-        return { meta, body };
+        return { slug: file.name.replace('.md', ''), meta, body };
       }));
 
-      container.innerHTML = cards.map(({ meta, body }) => {
-        const imgHtml = meta.image
-          ? `<div class="card-img"><img src="${meta.image}" alt="${meta.title || ''}"></div>`
-          : `<div class="card-img">Nessuna immagine</div>`;
-        const plainText = body.replace(/[#*_`>\[\]]/g, '').substring(0, 200);
-        const btnHtml = meta.link && meta.button_label
-          ? `<a href="${meta.link}" target="_blank" class="card-btn">${meta.button_label}</a>`
-          : '';
-        return `
-          <div class="card">
-            ${imgHtml}
-            <div class="card-body">
-              <div class="card-title">${meta.title || 'Senza titolo'}</div>
-              <div class="card-text">${plainText}</div>
-              ${btnHtml}
-            </div>
-          </div>`;
-      }).join('');
+      allContent = items;
+      renderHome();
 
     } catch (e) {
-      container.innerHTML = `<div class="loading">${e.message}</div>`;
+      document.getElementById('hero-content').innerHTML =
+        `<div class="loading">${e.message}</div>`;
     }
   }
 
-  loadCards();
+  loadContent();
 </script>
 
 </body>
