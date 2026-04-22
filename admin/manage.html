@@ -154,32 +154,9 @@
   const REPO = 'NopWebGit/unife-portal';
   const BRANCH = 'main';
   const API_BASE = `https://api.github.com/repos/${REPO}`;
+  const TOKEN_KEY = 'unife-manage-token';
 
   let token = null;
-  let pendingDelete = null;
-
-  function getToken() {
-    // Decap CMS salva il token in localStorage
-    const keys = ['netlify-cms-user', 'decap-cms-user'];
-    for (const key of keys) {
-      const raw = localStorage.getItem(key);
-      if (raw) {
-        try {
-          const parsed = JSON.parse(raw);
-          if (parsed.token) return parsed.token;
-        } catch {}
-      }
-    }
-    // Cerca in tutte le chiavi localStorage
-    for (let i = 0; i < localStorage.length; i++) {
-      const key = localStorage.key(i);
-      try {
-        const val = JSON.parse(localStorage.getItem(key));
-        if (val && val.token && val.provider === 'github') return val.token;
-      } catch {}
-    }
-    return null;
-  }
 
   function showToast(msg, success = false) {
     const t = document.getElementById('toast');
@@ -207,29 +184,58 @@
     return { title: meta.title || 'Senza titolo', tags };
   }
 
-  async function githubGet(path) {
-    const res = await fetch(`${API_BASE}/${path}`, {
-      headers: { Authorization: `token ${token}` }
-    });
+  function showTokenForm() {
+    document.getElementById('list').innerHTML = `
+      <div style="background:#252540;border-radius:8px;padding:28px;max-width:500px;">
+        <h3 style="margin-bottom:12px;">Accesso richiesto</h3>
+        <p style="color:#aaa;font-size:0.9rem;margin-bottom:20px;">
+          Inserisci un GitHub Personal Access Token con permesso <strong>repo</strong> per usare questa pagina.<br><br>
+          Puoi crearlo su GitHub in <strong>Settings &gt; Developer settings &gt; Personal access tokens &gt; Tokens (classic)</strong>.
+        </p>
+        <input id="token-input" type="password" placeholder="ghp_xxxxxxxxxxxx"
+          style="width:100%;padding:10px 14px;border-radius:4px;border:1px solid #444;background:#1a1a2e;color:#fff;font-size:0.95rem;margin-bottom:14px;">
+        <div style="display:flex;gap:10px;">
+          <button class="btn btn-duplicate" onclick="saveToken()" style="flex:1;">Accedi</button>
+          <button class="btn" onclick="clearToken()" style="background:#444;color:#fff;flex:0 0 auto;">Dimentica token</button>
+        </div>
+      </div>`;
+  }
+
+  function saveToken() {
+    const val = document.getElementById('token-input').value.trim();
+    if (!val) { showToast('Inserisci un token valido.'); return; }
+    localStorage.setItem(TOKEN_KEY, val);
+    token = val;
+    loadList();
+  }
+
+  function clearToken() {
+    localStorage.removeItem(TOKEN_KEY);
+    token = null;
+    showTokenForm();
+  }
+
+  async function githubRequest(path, method = 'GET', body = null) {
+    const opts = {
+      method,
+      headers: {
+        Authorization: `token ${token}`,
+        'Content-Type': 'application/json'
+      }
+    };
+    if (body) opts.body = JSON.stringify(body);
+    const res = await fetch(`${API_BASE}/${path}`, opts);
     if (!res.ok) throw new Error(`Errore API: ${res.status}`);
+    if (method === 'DELETE') return;
     return res.json();
   }
 
   async function loadList() {
-    token = getToken();
     const list = document.getElementById('list');
-
-    if (!token) {
-      list.innerHTML = `
-        <div class="not-logged">
-          <p>Devi prima accedere al pannello CMS per usare questa pagina.</p>
-          <a href="/admin/">Vai al pannello CMS</a>
-        </div>`;
-      return;
-    }
+    list.innerHTML = '<div class="loading">Caricamento...</div>';
 
     try {
-      const files = await githubGet(`contents/content?ref=${BRANCH}`);
+      const files = await githubRequest(`contents/content?ref=${BRANCH}`);
       const mdFiles = files.filter(f => f.name.endsWith('.md'));
 
       if (mdFiles.length === 0) {
@@ -238,35 +244,41 @@
       }
 
       const items = await Promise.all(mdFiles.map(async f => {
-        const data = await githubGet(`contents/${f.path}?ref=${BRANCH}`);
-        const text = atob(data.content.replace(/\n/g, ''));
-        const decoded = new TextDecoder().decode(Uint8Array.from(atob(data.content.replace(/\n/g, '')), c => c.charCodeAt(0)));
+        const data = await githubRequest(`contents/${f.path}?ref=${BRANCH}`);
+        const decoded = new TextDecoder().decode(
+          Uint8Array.from(atob(data.content.replace(/\n/g, '')), c => c.charCodeAt(0))
+        );
         const { title, tags } = parseFrontmatter(decoded);
-        return { name: f.name, path: f.path, sha: data.sha, title, tags, content: data.content };
+        return { name: f.name, path: f.path, sha: data.sha, title, tags, rawContent: data.content };
       }));
 
+      window._items = items;
+
       list.innerHTML = items.map(item => `
-        <div class="content-item" id="item-${item.name}">
+        <div class="content-item" id="item-${CSS.escape(item.name)}">
           <div class="item-info">
             <div class="item-title">${item.title}</div>
             <div class="item-slug">${item.name}</div>
             <div class="item-tags">${item.tags.map(t => `<span class="item-tag">${t}</span>`).join('')}</div>
           </div>
           <div class="item-actions">
-            <button class="btn btn-duplicate" onclick="duplicate('${item.name}', '${item.path}')">Duplica</button>
-            <button class="btn btn-delete" onclick="askDelete('${item.name}', '${item.path}', '${item.sha}', '${item.title.replace(/'/g, "\\'")}')">Elimina</button>
+            <button class="btn btn-duplicate" onclick="duplicate('${item.name}')">Duplica</button>
+            <button class="btn btn-delete" onclick="askDelete('${item.name}', '${item.path}', '${item.sha}', \`${item.title.replace(/`/g, "'")}\`)">Elimina</button>
           </div>
         </div>`).join('');
 
-      // Salva items globalmente per duplica
-      window._items = items;
-
     } catch (e) {
-      list.innerHTML = `<div class="loading">Errore: ${e.message}</div>`;
+      if (e.message.includes('401') || e.message.includes('403')) {
+        localStorage.removeItem(TOKEN_KEY);
+        showToast('Token non valido. Inseriscine uno nuovo.');
+        showTokenForm();
+      } else {
+        list.innerHTML = `<div class="loading">Errore: ${e.message}</div>`;
+      }
     }
   }
 
-  async function duplicate(name, path) {
+  async function duplicate(name) {
     const item = window._items.find(i => i.name === name);
     if (!item) return;
 
@@ -274,35 +286,29 @@
     const newName = `${base}-copia-${Date.now()}.md`;
     const newPath = `content/${newName}`;
 
-    const btn = document.querySelector(`#item-${name} .btn-duplicate`);
-    btn.disabled = true;
-    btn.textContent = 'Duplicazione...';
+    const btn = document.querySelector(`[onclick="duplicate('${name}')"]`);
+    if (btn) { btn.disabled = true; btn.textContent = 'Duplicazione...'; }
 
     try {
-      await fetch(`${API_BASE}/contents/${newPath}`, {
-        method: 'PUT',
-        headers: {
-          Authorization: `token ${token}`,
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          message: `Duplica ${name}`,
-          content: item.content,
-          branch: BRANCH
-        })
+      await githubRequest(`contents/${newPath}`, 'PUT', {
+        message: `Duplica ${name}`,
+        content: item.rawContent.replace(/\n/g, ''),
+        branch: BRANCH
       });
       showToast('Contenuto duplicato con successo.', true);
       setTimeout(loadList, 1500);
     } catch (e) {
-      showToast('Errore durante la duplicazione.');
-      btn.disabled = false;
-      btn.textContent = 'Duplica';
+      showToast('Errore durante la duplicazione: ' + e.message);
+      if (btn) { btn.disabled = false; btn.textContent = 'Duplica'; }
     }
   }
 
+  let pendingDelete = null;
+
   function askDelete(name, path, sha, title) {
     pendingDelete = { name, path, sha };
-    document.getElementById('confirm-text').textContent = `Stai per eliminare "${title}". Questa azione non è reversibile.`;
+    document.getElementById('confirm-text').textContent =
+      `Stai per eliminare "${title}". Questa azione non è reversibile.`;
     document.getElementById('confirm-overlay').classList.add('show');
     document.getElementById('confirm-ok').onclick = confirmDelete;
   }
@@ -317,31 +323,26 @@
     const { name, path, sha } = pendingDelete;
     closeConfirm();
 
-    const btn = document.querySelector(`#item-${name} .btn-delete`);
-    if (btn) { btn.disabled = true; btn.textContent = 'Eliminazione...'; }
-
     try {
-      await fetch(`${API_BASE}/contents/${path}`, {
-        method: 'DELETE',
-        headers: {
-          Authorization: `token ${token}`,
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          message: `Elimina ${name}`,
-          sha,
-          branch: BRANCH
-        })
+      await githubRequest(`contents/${path}`, 'DELETE', {
+        message: `Elimina ${name}`,
+        sha,
+        branch: BRANCH
       });
       showToast('Contenuto eliminato.', true);
       setTimeout(loadList, 1500);
     } catch (e) {
-      showToast('Errore durante l\'eliminazione.');
-      if (btn) { btn.disabled = false; btn.textContent = 'Elimina'; }
+      showToast('Errore durante l\'eliminazione: ' + e.message);
     }
   }
 
-  loadList();
+  // Avvio
+  token = localStorage.getItem(TOKEN_KEY);
+  if (token) {
+    loadList();
+  } else {
+    showTokenForm();
+  }
 </script>
 </body>
 </html>
