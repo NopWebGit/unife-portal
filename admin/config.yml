@@ -15,6 +15,11 @@ collections:
     fields:
       - { label: "Titolo", name: "title", widget: "string" }
       - { label: "Testo", name: "body", widget: "markdown" }
-      - { label: "Immagine", name: "image", widget: "image", required: false }
+      - { label: "Immagine di copertina", name: "image", widget: "image", required: false }
+      - label: "Tag"
+        name: "tags"
+        widget: "list"
+        required: false
+        hint: "Aggiungi uno o più tag separati da invio"
       - { label: "Link esterno", name: "link", widget: "string", required: false }
       - { label: "Etichetta pulsante", name: "button_label", widget: "string", required: false }
