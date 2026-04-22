@@ -1,6 +1,6 @@
 ---
-title: Corso di Filosofia
-image: /uploads/big.driver.2014-poster.jpg
+title: Corso di Biologia
+image: /uploads/28-days-later-28-giorni-dopo-2002-poster.jpg
 link: https://www.unife.it
 button_label: Vedi altro
 ---
