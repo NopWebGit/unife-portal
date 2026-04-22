@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Unife Orientamento 2026</title>
+  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: 'Segoe UI', Arial, sans-serif;
+      background: #0a0a0f;
+      color: #fff;
+      min-height: 100vh;
+    }
+
+    header {
+      background: linear-gradient(180deg, #000 0%, transparent 100%);
+      padding: 20px 40px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+
+    .logo {
+      font-size: 1.6rem;
+      font-weight: 800;
+      color: #e63946;
+      letter-spacing: 1px;
+    }
+
+    .hero {
+      background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+      padding: 80px 40px;
+      text-align: center;
+    }
+
+    .hero h1 {
+      font-size: clamp(1.8rem, 5vw, 3.5rem);
+      font-weight: 900;
+      margin-bottom: 16px;
+      line-height: 1.2;
+    }
+
+    .hero p {
+      font-size: clamp(1rem, 2vw, 1.3rem);
+      color: #aaa;
+      max-width: 600px;
+      margin: 0 auto 30px;
+    }
+
+    .hero-btn {
+      display: inline-block;
+      background: #e63946;
+      color: #fff;
+      padding: 14px 36px;
+      border-radius: 4px;
+      text-decoration: none;
+      font-weight: 700;
+      font-size: 1rem;
+      transition: background 0.2s;
+    }
+
+    .hero-btn:hover { background: #c1121f; }
+
+    .section-title {
+      font-size: 1.4rem;
+      font-weight: 700;
+      padding: 40px 40px 16px;
+      color: #fff;
+    }
+
+    .cards-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 20px;
+      padding: 0 40px 40px;
+    }
+
+    .card {
+      background: #1a1a2e;
+      border-radius: 8px;
+      overflow: hidden;
+      transition: transform 0.2s, box-shadow 0.2s;
+      cursor: pointer;
+    }
+
+    .card:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 12px 40px rgba(230,57,70,0.2);
+    }
+
+    .card-img {
+      width: 100%;
+      aspect-ratio: 16/9;
+      object-fit: cover;
+      background: #0f3460;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #444;
+      font-size: 0.9rem;
+    }
+
+    .card-img img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .card-body {
+      padding: 16px;
+    }
+
+    .card-title {
+      font-size: 1rem;
+      font-weight: 700;
+      margin-bottom: 8px;
+    }
+
+    .card-text {
+      font-size: 0.85rem;
+      color: #aaa;
+      line-height: 1.5;
+      margin-bottom: 14px;
+      display: -webkit-box;
+      -webkit-line-clamp: 3;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+
+    .card-btn {
+      display: inline-block;
+      background: #e63946;
+      color: #fff;
+      padding: 8px 20px;
+      border-radius: 4px;
+      text-decoration: none;
+      font-size: 0.85rem;
+      font-weight: 600;
+      transition: background 0.2s;
+    }
+
+    .card-btn:hover { background: #c1121f; }
+
+    .loading {
+      text-align: center;
+      padding: 60px;
+      color: #666;
+    }
+
+    footer {
+      background: #000;
+      text-align: center;
+      padding: 30px;
+      color: #444;
+      font-size: 0.85rem;
+      margin-top: 40px;
+    }
+
+    @media (max-width: 600px) {
+      header { padding: 16px 20px; }
+      .hero { padding: 60px 20px; }
+      .section-title { padding: 30px 20px 12px; }
+      .cards-grid { padding: 0 20px 30px; gap: 16px; }
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <div class="logo">UNIFE</div>
+</header>
+
+<section class="hero">
+  <h1>Orientamento 2026</h1>
+  <p>Scopri i corsi, i campus e le opportunità che ti aspettano.</p>
+  <a href="#contenuti" class="hero-btn">Esplora</a>
+</section>
+
+<div id="contenuti">
+  <div class="section-title">In evidenza</div>
+  <div class="cards-grid" id="cards-container">
+    <div class="loading">Caricamento contenuti...</div>
+  </div>
+</div>
+
+<footer>
+  Università di Ferrara &mdash; Orientamento 2026
+</footer>
+
+<script>
+  const REPO = 'NopWebGit/unife-portal';
+  const BRANCH = 'main';
+  const API = `https://api.github.com/repos/${REPO}/contents/content?ref=${BRANCH}`;
+  const RAW = `https://raw.githubusercontent.com/${REPO}/${BRANCH}/`;
+
+  function parseFrontmatter(text) {
+    const match = text.match(/^---\n([\s\S]*?)\n---\n?([\s\S]*)$/);
+    if (!match) return { meta: {}, body: text };
+    const meta = {};
+    match[1].split('\n').forEach(line => {
+      const [key, ...val] = line.split(':');
+      if (key) meta[key.trim()] = val.join(':').trim().replace(/^["']|["']$/g, '');
+    });
+    return { meta, body: match[2].trim() };
+  }
+
+  async function loadCards() {
+    const container = document.getElementById('cards-container');
+    try {
+      const res = await fetch(API);
+      if (!res.ok) throw new Error('Nessun contenuto trovato');
+      const files = await res.json();
+      const mdFiles = files.filter(f => f.name.endsWith('.md'));
+
+      if (mdFiles.length === 0) {
+        container.innerHTML = '<div class="loading">Nessun contenuto ancora. Accedi al pannello admin per aggiungerne.</div>';
+        return;
+      }
+
+      const cards = await Promise.all(mdFiles.map(async file => {
+        const raw = await fetch(RAW + file.path);
+        const text = await raw.text();
+        const { meta, body } = parseFrontmatter(text);
+        return { meta, body };
+      }));
+
+      container.innerHTML = cards.map(({ meta, body }) => {
+        const imgHtml = meta.image
+          ? `<div class="card-img"><img src="${meta.image}" alt="${meta.title || ''}"></div>`
+          : `<div class="card-img">Nessuna immagine</div>`;
+        const plainText = body.replace(/[#*_`>\[\]]/g, '').substring(0, 200);
+        const btnHtml = meta.link && meta.button_label
+          ? `<a href="${meta.link}" target="_blank" class="card-btn">${meta.button_label}</a>`
+          : '';
+        return `
+          <div class="card">
+            ${imgHtml}
+            <div class="card-body">
+              <div class="card-title">${meta.title || 'Senza titolo'}</div>
+              <div class="card-text">${plainText}</div>
+              ${btnHtml}
+            </div>
+          </div>`;
+      }).join('');
+
+    } catch (e) {
+      container.innerHTML = `<div class="loading">${e.message}</div>`;
+    }
+  }
+
+  loadCards();
+</script>
+
+</body>
+</html>
