@@ -4,8 +4,38 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Admin</title>
+  <style>
+    #admin-topbar {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 36px;
+      background: #0f3460;
+      display: flex;
+      align-items: center;
+      padding: 0 20px;
+      gap: 24px;
+      z-index: 99999;
+      font-family: 'Segoe UI', Arial, sans-serif;
+    }
+    #admin-topbar a {
+      color: #fff;
+      text-decoration: none;
+      font-size: 0.8rem;
+      font-weight: 600;
+      opacity: 0.85;
+      transition: opacity 0.2s;
+    }
+    #admin-topbar a:hover { opacity: 1; }
+    body { padding-top: 36px; }
+  </style>
 </head>
 <body>
+  <div id="admin-topbar">
+    <a href="/admin/manage.html">Gestione contenuti</a>
+    <a href="/" target="_blank">Vedi sito</a>
+  </div>
   <script src="https://unpkg.com/decap-cms@^3.0.0/dist/decap-cms.js"></script>
 </body>
 </html>
